@@ -177,49 +177,15 @@ pub async fn main(req: Request, env: Env, _ctx: worker::Context) -> Result<Respo
         })
         .post_async("/api/ps", |mut req, _| async move {
             let data: PsRequest = req.json().await?;
-            Response::from_json(&system::generate_ps(
-                &data.format,
-                &data.sort,
-                data.tree,
-                &data.filter,
-                data.wide,
-                data.threads,
-                &data.user,
-                &data.pid,
-            ))
+            Response::from_json(&system::generate_ps(&data))
         })
         .post_async("/api/tcpdump", |mut req, _| async move {
             let data: TcpdumpRequest = req.json().await?;
-            Response::from_json(&system::generate_tcpdump(
-                &data.interface,
-                &data.protocol,
-                &data.host,
-                &data.port,
-                data.verbose,
-                data.ascii,
-                data.hex,
-                &data.write_file,
-                &data.count,
-            ))
+            Response::from_json(&system::generate_tcpdump(&data))
         })
         .post_async("/api/git", |mut req, _| async move {
             let data: GitRequest = req.json().await?;
-            Response::from_json(&system::generate_git(
-                &data.cmd,
-                &data.target,
-                &data.msg,
-                &data.remote,
-                &data.branch,
-                data.opt_force,
-                data.opt_rebase,
-                data.opt_all,
-                data.opt_amend,
-                data.opt_hard,
-                data.opt_new_branch,
-                data.opt_tags,
-                data.opt_oneline,
-                data.opt_graph,
-            ))
+            Response::from_json(&system::generate_git(&data))
         })
         .post_async("/api/git-cmd", |mut req, _| async move {
             let data: GitCmdRequest = req.json().await?;
@@ -232,29 +198,11 @@ pub async fn main(req: Request, env: Env, _ctx: worker::Context) -> Result<Respo
         })
         .post_async("/api/strace", |mut req, _| async move {
             let data: StraceRequest = req.json().await?;
-            Response::from_json(&system::generate_strace(
-                &data.target,
-                data.is_pid,
-                data.follow,
-                data.summary,
-                &data.output_file,
-                &data.filter,
-                &data.string_limit,
-                data.timestamp,
-            ))
+            Response::from_json(&system::generate_strace(&data))
         })
         .post_async("/api/iostat", |mut req, _| async move {
             let data: IostatRequest = req.json().await?;
-            Response::from_json(&system::generate_iostat(
-                &data.interval,
-                &data.count,
-                data.human,
-                data.extended,
-                &data.unit,
-                data.partitions,
-                data.timestamp,
-                &data.device,
-            ))
+            Response::from_json(&system::generate_iostat(&data))
         })
         .post_async("/api/nice", |mut req, _| async move {
             let data: NiceRequest = req.json().await?;
@@ -268,18 +216,7 @@ pub async fn main(req: Request, env: Env, _ctx: worker::Context) -> Result<Respo
         })
         .post_async("/api/ls", |mut req, _| async move {
             let data: LsRequest = req.json().await?;
-            Response::from_json(&system::generate_ls(
-                &data.path,
-                data.all,
-                data.long,
-                data.human,
-                data.time,
-                data.reverse,
-                data.recursive,
-                data.inode,
-                data.directory,
-                data.color,
-            ))
+            Response::from_json(&system::generate_ls(&data))
         })
         .post_async("/api/firewall", |mut req, _| async move {
             let data: FirewallRequest = req.json().await?;
@@ -304,16 +241,7 @@ pub async fn main(req: Request, env: Env, _ctx: worker::Context) -> Result<Respo
         })
         .post_async("/api/find", |mut req, _| async move {
             let data: FindRequest = req.json().await?;
-            Response::from_json(&system::generate_find(
-                &data.path,
-                &data.name,
-                data.iname,
-                &data.target_type,
-                &data.size,
-                &data.mtime,
-                data.empty,
-                &data.exec,
-            ))
+            Response::from_json(&system::generate_find(&data))
         })
         .post_async("/api/dockerfile", |mut req, _| async move {
             let data: DockerfileRequest = req.json().await?;
@@ -324,23 +252,7 @@ pub async fn main(req: Request, env: Env, _ctx: worker::Context) -> Result<Respo
         .post_async("/api/nginx", |mut req, _| async move {
             let data: NginxRequest = req.json().await?;
             Response::from_json(&GenericResponse {
-                result: utils::generate_nginx_config(
-                    &data.domain,
-                    data.port,
-                    &data.root,
-                    &data.locations,
-                    &data.upstream,
-                    data.https,
-                    data.force_https,
-                    &data.ssl_cert,
-                    &data.ssl_key,
-                    data.gzip,
-                    &data.client_max_body_size,
-                    &data.keepalive_timeout,
-                    &data.proxy_connect_timeout,
-                    &data.proxy_read_timeout,
-                    &data.proxy_send_timeout,
-                ),
+                result: utils::generate_nginx_config(&data),
             })
         })
         .post_async("/api/lorem", |mut req, _| async move {
@@ -351,21 +263,7 @@ pub async fn main(req: Request, env: Env, _ctx: worker::Context) -> Result<Respo
         })
         .post_async("/api/rsync", |mut req, _| async move {
             let data: RsyncRequest = req.json().await?;
-            Response::from_json(&system::generate_rsync(
-                &data.source,
-                &data.user,
-                &data.host,
-                &data.port,
-                &data.remote_path,
-                data.archive,
-                data.compress,
-                data.verbose,
-                data.delete,
-                data.dry_run,
-                data.progress,
-                data.ssh,
-                &data.exclude,
-            ))
+            Response::from_json(&system::generate_rsync(&data))
         })
         .post_async("/api/fake-user", |mut req, _| async move {
             let data: FakeUserRequest = req.json().await?;

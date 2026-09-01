@@ -71,19 +71,18 @@ pub fn generate_tar(
     TarResponse { command: cmd }
 }
 
-pub fn generate_ps(
-    format: &str,
-    sort: &str,
-    tree: bool,
-    filter: &str,
-    wide: bool,
-    threads: bool,
-    user: &str,
-    pid: &str,
-) -> PsResponse {
+pub fn generate_ps(req: &crate::models::system::PsRequest) -> PsResponse {
+    let format = &req.format;
+    let sort = &req.sort;
+    let tree = req.tree;
+    let filter = &req.filter;
+    let wide = req.wide;
+    let threads = req.threads;
+    let user = &req.user;
+    let pid = &req.pid;
     let mut cmd = String::from("ps");
 
-    match format {
+    match format.as_str() {
         "ef" => {
             cmd.push_str(" -ef");
             if tree {
@@ -93,7 +92,7 @@ pub fn generate_ps(
                 cmd.push_str("ww");
             }
             if threads {
-                cmd.push_str("L");
+                cmd.push('L');
             }
         }
         _ => {
@@ -134,16 +133,15 @@ pub fn generate_ps(
     PsResponse { command: cmd }
 }
 
-pub fn generate_strace(
-    target: &str,
-    is_pid: bool,
-    follow: bool,
-    summary: bool,
-    output_file: &str,
-    filter: &str,
-    string_limit: &str,
-    timestamp: bool,
-) -> StraceResponse {
+pub fn generate_strace(req: &crate::models::system::StraceRequest) -> StraceResponse {
+    let target = &req.target;
+    let is_pid = req.is_pid;
+    let follow = req.follow;
+    let summary = req.summary;
+    let output_file = &req.output_file;
+    let filter = &req.filter;
+    let string_limit = &req.string_limit;
+    let timestamp = req.timestamp;
     let mut cmd = String::from("strace");
 
     if follow {
@@ -181,16 +179,15 @@ pub fn generate_strace(
     StraceResponse { command: cmd }
 }
 
-pub fn generate_iostat(
-    interval: &str,
-    count: &str,
-    human: bool,
-    extended: bool,
-    unit: &str,
-    partitions: bool,
-    timestamp: bool,
-    device: &str,
-) -> IostatResponse {
+pub fn generate_iostat(req: &crate::models::system::IostatRequest) -> IostatResponse {
+    let interval = &req.interval;
+    let count = &req.count;
+    let human = req.human;
+    let extended = req.extended;
+    let unit = &req.unit;
+    let partitions = req.partitions;
+    let timestamp = req.timestamp;
+    let device = &req.device;
     let mut cmd = String::from("iostat");
 
     if human {
@@ -203,7 +200,7 @@ pub fn generate_iostat(
         cmd.push_str(" -t");
     }
 
-    match unit {
+    match unit.as_str() {
         "k" => cmd.push_str(" -k"),
         "m" => cmd.push_str(" -m"),
         _ => {}
@@ -238,7 +235,7 @@ pub fn generate_nice(
     target: &str,
 ) -> NiceResponse {
     let mut cmd = String::new();
-    let prio = priority.max(-20).min(19);
+    let prio = priority.clamp(-20, 19);
 
     if mode == "renice" {
         cmd.push_str("renice -n ");
@@ -267,18 +264,17 @@ pub fn generate_nice(
     NiceResponse { command: cmd }
 }
 
-pub fn generate_ls(
-    path: &str,
-    all: bool,
-    long: bool,
-    human: bool,
-    time: bool,
-    reverse: bool,
-    recursive: bool,
-    inode: bool,
-    directory: bool,
-    color: bool,
-) -> LsResponse {
+pub fn generate_ls(req: &crate::models::system::LsRequest) -> LsResponse {
+    let path = &req.path;
+    let all = req.all;
+    let long = req.long;
+    let human = req.human;
+    let time = req.time;
+    let reverse = req.reverse;
+    let recursive = req.recursive;
+    let inode = req.inode;
+    let directory = req.directory;
+    let color = req.color;
     let mut cmd = String::from("ls");
 
     if color {
@@ -358,16 +354,15 @@ pub fn generate_systemctl(
     SystemctlResponse { command: cmd }
 }
 
-pub fn generate_find(
-    path: &str,
-    name: &str,
-    iname: bool,
-    target_type: &str,
-    size: &str,
-    mtime: &str,
-    empty: bool,
-    exec: &str,
-) -> FindResponse {
+pub fn generate_find(req: &crate::models::system::FindRequest) -> FindResponse {
+    let path = &req.path;
+    let name = &req.name;
+    let iname = req.iname;
+    let target_type = &req.target_type;
+    let size = &req.size;
+    let mtime = &req.mtime;
+    let empty = req.empty;
+    let exec = &req.exec;
     let mut cmd = String::from("find");
 
     if !path.trim().is_empty() {
@@ -505,21 +500,20 @@ pub fn generate_dockerfile(stages: &[DockerfileStage]) -> String {
     df
 }
 
-pub fn generate_rsync(
-    source: &str,
-    user: &str,
-    host: &str,
-    port: &str,
-    remote_path: &str,
-    archive: bool,
-    compress: bool,
-    verbose: bool,
-    delete: bool,
-    dry_run: bool,
-    progress: bool,
-    ssh: bool,
-    exclude: &str,
-) -> RsyncResponse {
+pub fn generate_rsync(req: &crate::models::system::RsyncRequest) -> RsyncResponse {
+    let source = &req.source;
+    let user = &req.user;
+    let host = &req.host;
+    let port = &req.port;
+    let remote_path = &req.remote_path;
+    let archive = req.archive;
+    let compress = req.compress;
+    let verbose = req.verbose;
+    let delete = req.delete;
+    let dry_run = req.dry_run;
+    let progress = req.progress;
+    let ssh = req.ssh;
+    let exclude = &req.exclude;
     let mut cmd = String::from("rsync");
 
     let mut shorts = String::new();
@@ -577,12 +571,10 @@ pub fn generate_rsync(
         if !remote_path.trim().is_empty() {
             cmd.push_str(remote_path.trim());
         }
+    } else if !remote_path.trim().is_empty() {
+        cmd.push_str(remote_path.trim());
     } else {
-        if !remote_path.trim().is_empty() {
-            cmd.push_str(remote_path.trim());
-        } else {
-            cmd.push_str("/dest/path");
-        }
+        cmd.push_str("/dest/path");
     }
     cmd.push('"');
 
@@ -681,17 +673,16 @@ pub fn generate_sed(
     SedResponse { command: cmd }
 }
 
-pub fn generate_tcpdump(
-    interface: &str,
-    protocol: &str,
-    host: &str,
-    port: &str,
-    verbose: bool,
-    ascii: bool,
-    hex: bool,
-    write_file: &str,
-    count: &str,
-) -> TcpdumpResponse {
+pub fn generate_tcpdump(req: &crate::models::system::TcpdumpRequest) -> TcpdumpResponse {
+    let interface = &req.interface;
+    let protocol = &req.protocol;
+    let host = &req.host;
+    let port = &req.port;
+    let verbose = req.verbose;
+    let ascii = req.ascii;
+    let hex = req.hex;
+    let write_file = &req.write_file;
+    let count = &req.count;
     let mut cmd = String::from("tcpdump");
     if !interface.trim().is_empty() {
         cmd.push_str(" -i ");
@@ -729,24 +720,23 @@ pub fn generate_tcpdump(
     TcpdumpResponse { command: cmd }
 }
 
-pub fn generate_git(
-    cmd: &str,
-    target: &str,
-    msg: &str,
-    remote: &str,
-    branch: &str,
-    opt_force: bool,
-    opt_rebase: bool,
-    opt_all: bool,
-    opt_amend: bool,
-    opt_hard: bool,
-    opt_new_branch: bool,
-    opt_tags: bool,
-    opt_oneline: bool,
-    opt_graph: bool,
-) -> GitResponse {
+pub fn generate_git(req: &crate::models::system::GitRequest) -> GitResponse {
+    let cmd = &req.cmd;
+    let target = &req.target;
+    let msg = &req.msg;
+    let remote = &req.remote;
+    let branch = &req.branch;
+    let opt_force = req.opt_force;
+    let opt_rebase = req.opt_rebase;
+    let opt_all = req.opt_all;
+    let opt_amend = req.opt_amend;
+    let opt_hard = req.opt_hard;
+    let opt_new_branch = req.opt_new_branch;
+    let opt_tags = req.opt_tags;
+    let opt_oneline = req.opt_oneline;
+    let opt_graph = req.opt_graph;
     let mut command = format!("git {}", cmd);
-    match cmd {
+    match cmd.as_str() {
         "init" | "clone" => {
             if !target.trim().is_empty() {
                 command.push(' ');
@@ -987,8 +977,8 @@ pub fn generate_curl(method: &str, url: &str, headers: &str, body: &str) -> Curl
     }
 
     let mut has_payload = false;
-    if ["POST", "PUT", "PATCH"].contains(&m.as_str()) {
-        if !body.is_empty() {
+    if ["POST", "PUT", "PATCH"].contains(&m.as_str())
+        && !body.is_empty() {
             has_payload = true;
             let py_body = body.replace('\\', "\\\\").replace('"', "\\\"");
             py.push_str(&format!("\npayload = \"{}\"\n", py_body));
@@ -1001,7 +991,6 @@ pub fn generate_curl(method: &str, url: &str, headers: &str, body: &str) -> Curl
             cmd.push_str(&body.replace('\'', "'\\''"));
             cmd.push('\'');
         }
-    }
 
     py.push_str(&format!("\nresponse = requests.request(\"{}\", url", m));
     if has_headers {

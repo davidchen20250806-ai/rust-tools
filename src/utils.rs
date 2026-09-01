@@ -40,7 +40,7 @@ pub fn compute_diff(old: &str, new: &str) -> DiffResponse {
 pub fn check_cron(cron: &str) -> CronResponse {
     // The `cron` crate requires 6 or 7 fields (Seconds is the first one).
     // Standard Linux cron has 5 fields. We need to handle this.
-    let cron_expr = if cron.trim().split_whitespace().count() == 5 {
+    let cron_expr = if cron.split_whitespace().count() == 5 {
         format!("0 {}", cron)
     } else {
         cron.to_string()
@@ -154,7 +154,7 @@ pub fn calculate_subnet(ip: &str, cidr: u8) -> SubnetResponse {
         } else {
             2u64.pow(32 - net.prefix() as u32)
         };
-        let usable_hosts = if total_hosts > 2 { total_hosts - 2 } else { 0 };
+        let usable_hosts = total_hosts.saturating_sub(2);
 
         SubnetResponse {
             valid: true,
@@ -524,23 +524,22 @@ pub fn process_escape(text: &str, mode: &str) -> String {
     }
 }
 
-pub fn generate_nginx_config(
-    domain: &str,
-    port: u16,
-    root: &str,
-    locations: &[NginxLocation],
-    upstream: &str,
-    https: bool,
-    force_https: bool,
-    ssl_cert: &str,
-    ssl_key: &str,
-    gzip: bool,
-    client_max_body_size: &str,
-    keepalive_timeout: &str,
-    proxy_connect_timeout: &str,
-    proxy_read_timeout: &str,
-    proxy_send_timeout: &str,
-) -> String {
+pub fn generate_nginx_config(req: &crate::models::system::NginxRequest) -> String {
+    let domain = &req.domain;
+    let port = req.port;
+    let root = &req.root;
+    let locations = &req.locations;
+    let upstream = &req.upstream;
+    let https = req.https;
+    let force_https = req.force_https;
+    let ssl_cert = &req.ssl_cert;
+    let ssl_key = &req.ssl_key;
+    let gzip = req.gzip;
+    let client_max_body_size = &req.client_max_body_size;
+    let keepalive_timeout = &req.keepalive_timeout;
+    let proxy_connect_timeout = &req.proxy_connect_timeout;
+    let proxy_read_timeout = &req.proxy_read_timeout;
+    let proxy_send_timeout = &req.proxy_send_timeout;
     let mut conf = String::new();
 
     if !upstream.trim().is_empty() {
