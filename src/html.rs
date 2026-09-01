@@ -722,7 +722,11 @@ pub fn get_homepage() -> &'static str {
 
         <div id="date" class="panel">
             <h2>时间转换</h2>
-            <div class="row"><input id="ts-in" placeholder="Timestamp or YYYY-MM-DD..."><button class="btn" style="background:#64748b" onclick="fillTime()">当前</button><button class="btn" onclick="doDate()">转换</button></div>
+            <div class="row">
+                <input type="datetime-local" id="ts-in" step="1" style="flex: 1;">
+                <button class="btn" style="background:#64748b" onclick="fillTime()">当前</button>
+                <button class="btn" onclick="doDate()">转换</button>
+            </div>
             <div class="grid-4">
                 <div class="result-card"><div class="result-label">Unix (s)</div><div class="result-val" id="ts-s"></div><button class="icon-btn" onclick="copy('ts-s')"><svg><use href="#i-copy"></use></svg></button></div>
                 <div class="result-card"><div class="result-label">Unix (ms)</div><div class="result-val" id="ts-ms"></div><button class="icon-btn" onclick="copy('ts-ms')"><svg><use href="#i-copy"></use></svg></button></div>
@@ -2268,7 +2272,12 @@ enabled = true"></textarea></div><div class="editor-box"><div class="editor-head
             document.getElementById('m16u').innerText='';
           }
         }
-        function fillTime() { document.getElementById('ts-in').value=Math.floor(Date.now()/1000); doDate(); }
+        function fillTime() { 
+            const d = new Date();
+            const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 19);
+            document.getElementById('ts-in').value = local; 
+            doDate(); 
+        }
         async function doDate() { 
           let v=document.getElementById('ts-in').value;
           if(!v) {
