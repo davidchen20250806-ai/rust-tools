@@ -1,6 +1,5 @@
-pub fn get_homepage() -> &'static str {
-    r####"
-<!DOCTYPE html>
+pub fn get_homepage() -> String {
+    let html = r####"<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -1920,6 +1919,7 @@ enabled = true"></textarea></div><div class="editor-box"><div class="editor-head
             </div>
         </div>
 
+        <div style="text-align: center; margin-top: 40px; margin-bottom: 20px; font-size: 12px; color: #888; font-family: monospace; width: 100%;">Build Date: {BUILD_DATE}</div>
     </main>
 
     <script>
@@ -3448,5 +3448,8 @@ enabled = true"></textarea></div><div class="editor-box"><div class="editor-head
     </script>
 </body>
 </html>
-    "####
+    "####;
+    
+    let build_date = option_env!("BUILD_DATE").unwrap_or("Unknown");
+    html.replace("{BUILD_DATE}", build_date)
 }
