@@ -192,7 +192,7 @@ pub fn generate_custom_regex(
     contains: &str,
     not_contains: &str,
 ) -> RegexBuildResponse {
-    let esc = |s: &str| regex::escape(s);
+    let esc = |s: &str| ::regex::escape(s);
     let mut p = String::from("^");
 
     if !not_starts.is_empty() {
