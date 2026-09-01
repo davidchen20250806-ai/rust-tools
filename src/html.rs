@@ -1747,6 +1747,10 @@ enabled = true"></textarea></div><div class="editor-box"><div class="editor-head
                         <div><div class="cron-label">注册变量 (Register)</div><input id="am-reg" placeholder="result_var"></div>
                         <div><div class="cron-label">条件 (When)</div><input id="am-when" placeholder="result_var.changed"></div>
                         <div><div class="cron-label">通知 (Notify)</div><input id="am-notify" placeholder="Restart Nginx"></div>
+                        <div><div class="cron-label">标签 (Tags)</div><input id="am-tags" placeholder="deploy, web"></div>
+                        <div><div class="cron-label">委托 (Delegate To)</div><input id="am-delegate" placeholder="localhost"></div>
+                        <div><div class="cron-label">变更条件 (Changed When)</div><input id="am-changed" placeholder="'output' in result.stdout"></div>
+                        <div><div class="cron-label">失败条件 (Failed When)</div><input id="am-failed" placeholder="'error' in result.stderr"></div>
                         <div style="display:flex;align-items:flex-end;padding-bottom:15px"><label style="display:flex;align-items:center;gap:5px;cursor:pointer;user-select:none"><input type="checkbox" id="am-ignore" style="width:18px;height:18px;accent-color:var(--primary)"> 忽略错误</label></div>
                         <div style="grid-column: span 4"><div class="cron-label">循环 (Loop) - 输入列表 (每行一个) 或 变量 ({{ items }})</div><textarea id="am-loop" style="height:60px; font-family:monospace;" placeholder="- item1&#10;- item2&#10;或 {{ my_list }}"></textarea></div>
                     </div>
@@ -3307,7 +3311,7 @@ enabled = true"></textarea></div><div class="editor-box"><div class="editor-head
 
         function addAnsTask() {
             const m = document.getElementById('ans-mod').value;
-            const val = (id) => document.getElementById(id) ? document.getElementById(id).value : '';
+            const val = (id) => document.getElementById(id) ? document.getElementById(id).value.trim() : '';
             const chk = (id) => document.getElementById(id) ? document.getElementById(id).checked : false;
             
             let t = '';
@@ -3376,9 +3380,20 @@ enabled = true"></textarea></div><div class="editor-box"><div class="editor-head
             }
             
             // Common options
-            if(val('am-reg')) t += `\n  register: ${val('am-reg')}`;
-            if(val('am-when')) t += `\n  when: ${val('am-when')}`;
-            if(val('am-notify')) t += `\n  notify: ${val('am-notify')}`;
+            const reg = val('am-reg');
+            if(reg) t += `\n  register: ${reg}`;
+            const when = val('am-when');
+            if(when) t += `\n  when: ${when}`;
+            const notify = val('am-notify');
+            if(notify) t += `\n  notify: ${notify}`;
+            const tags = val('am-tags');
+            if(tags) t += `\n  tags: [${tags}]`;
+            const delegate = val('am-delegate');
+            if(delegate) t += `\n  delegate_to: ${delegate}`;
+            const changed = val('am-changed');
+            if(changed) t += `\n  changed_when: ${changed}`;
+            const failed = val('am-failed');
+            if(failed) t += `\n  failed_when: ${failed}`;
             if(chk('am-ignore')) t += `\n  ignore_errors: yes`;
             
             if(val('am-loop')) {

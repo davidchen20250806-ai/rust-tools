@@ -121,10 +121,15 @@ pub fn convert_unit(value: f64, type_: &str, from: &str, to: &str) -> UnitRespon
 }
 
 pub fn obfuscate_js(js: &str) -> String {
-    let mut res = String::from("eval(\"");
-    for b in js.bytes() {
-        res.push_str(&format!("\\x{:02x}", b));
+    let mut res = String::from("eval(String.fromCodePoint(");
+    let mut first = true;
+    for c in js.chars() {
+        if !first {
+            res.push(',');
+        }
+        res.push_str(&format!("{}", c as u32));
+        first = false;
     }
-    res.push_str("\");");
+    res.push_str("));");
     res
 }

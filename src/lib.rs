@@ -674,41 +674,70 @@ spec:
             data.port
         ));
 
-        if data.cpu_limit.is_some()
-            || data.memory_limit.is_some()
-            || data.cpu_request.is_some()
-            || data.memory_request.is_some()
-        {
+        let has_cpu_limit = data.cpu_limit.as_ref().filter(|s| !s.is_empty()).is_some();
+        let has_mem_limit = data
+            .memory_limit
+            .as_ref()
+            .filter(|s| !s.is_empty())
+            .is_some();
+        let has_cpu_req = data
+            .cpu_request
+            .as_ref()
+            .filter(|s| !s.is_empty())
+            .is_some();
+        let has_mem_req = data
+            .memory_request
+            .as_ref()
+            .filter(|s| !s.is_empty())
+            .is_some();
+
+        if has_cpu_limit || has_mem_limit || has_cpu_req || has_mem_req {
             yaml.push_str("        resources:\n");
-            if data.cpu_limit.is_some() || data.memory_limit.is_some() {
+            if has_cpu_limit || has_mem_limit {
                 yaml.push_str("          limits:\n");
-                if let Some(ref cpu) = data.cpu_limit {
-                    yaml.push_str(&format!("            cpu: {}\n", cpu));
+                if has_cpu_limit {
+                    yaml.push_str(&format!(
+                        "            cpu: {}\n",
+                        data.cpu_limit.as_ref().unwrap()
+                    ));
                 }
-                if let Some(ref mem) = data.memory_limit {
-                    yaml.push_str(&format!("            memory: {}\n", mem));
+                if has_mem_limit {
+                    yaml.push_str(&format!(
+                        "            memory: {}\n",
+                        data.memory_limit.as_ref().unwrap()
+                    ));
                 }
             }
-            if data.cpu_request.is_some() || data.memory_request.is_some() {
+            if has_cpu_req || has_mem_req {
                 yaml.push_str("          requests:\n");
-                if let Some(ref cpu) = data.cpu_request {
-                    yaml.push_str(&format!("            cpu: {}\n", cpu));
+                if has_cpu_req {
+                    yaml.push_str(&format!(
+                        "            cpu: {}\n",
+                        data.cpu_request.as_ref().unwrap()
+                    ));
                 }
-                if let Some(ref mem) = data.memory_request {
-                    yaml.push_str(&format!("            memory: {}\n", mem));
+                if has_mem_req {
+                    yaml.push_str(&format!(
+                        "            memory: {}\n",
+                        data.memory_request.as_ref().unwrap()
+                    ));
                 }
             }
         }
 
-        if !data.env.is_empty() {
+        let valid_env: Vec<&K8sEnvVar> = data
+            .env
+            .iter()
+            .filter(|e| !e.key.is_empty() && !e.value.is_empty())
+            .collect();
+
+        if !valid_env.is_empty() {
             yaml.push_str("        env:\n");
-            for e in &data.env {
-                if !e.key.is_empty() && !e.value.is_empty() {
-                    yaml.push_str(&format!(
-                        "        - name: {}\n          value: \"{}\"\n",
-                        e.key, e.value
-                    ));
-                }
+            for e in valid_env {
+                yaml.push_str(&format!(
+                    "        - name: {}\n          value: \"{}\"\n",
+                    e.key, e.value
+                ));
             }
         }
 
@@ -884,17 +913,42 @@ fn generate_k8s_cmd(data: &K8sCmdRequest) -> (String, String) {
                 format!("查看 {} {} 的日志", rtype, name),
             )
         }
-        "exec" => (
-            format!("kubectl exec -it {} -n {} -- /bin/sh", name, ns),
-            format!("进入 Pod {} 的 Shell (仅适用于 Pod)", name),
-        ),
-        "scale" => (
-            format!(
-                "kubectl scale {} {} --replicas={} -n {}",
-                rtype, name, data.replicas, ns
-            ),
-            format!("将 {} {} 伸缩到 {} 个副本", rtype, name, data.replicas),
-        ),
+        "exec" => {
+            if rtype == "pod" {
+                (
+                    format!("kubectl exec -it {} -n {} -- /bin/sh", name, ns),
+                    format!("进入 Pod {} 的 Shell", name),
+                )
+            } else {
+                (
+                    format!("# 错误: exec 命令仅适用于 Pod\n# 当前选择资源: {}", rtype),
+                    format!("无法对 {} 执行 exec", rtype),
+                )
+            }
+        }
+        "scale" => {
+            if [
+                "deployment",
+                "statefulset",
+                "replicaset",
+                "replicationcontroller",
+            ]
+            .contains(&rtype)
+            {
+                (
+                    format!(
+                        "kubectl scale {} {} --replicas={} -n {}",
+                        rtype, name, data.replicas, ns
+                    ),
+                    format!("将 {} {} 伸缩到 {} 个副本", rtype, name, data.replicas),
+                )
+            } else {
+                (
+                    format!("# 错误: 资源类型 '{}' 不支持伸缩 (Scale)\n# 仅支持: Deployment, StatefulSet, ReplicaSet", rtype),
+                    format!("无法对 {} 进行伸缩操作", rtype),
+                )
+            }
+        }
         "port_forward" => (
             format!(
                 "kubectl port-forward {} {}:{} -n {}",
@@ -912,22 +966,29 @@ fn generate_k8s_cmd(data: &K8sCmdRequest) -> (String, String) {
                 rtype, data.local_port, data.remote_port
             ),
         ),
-        "rollout_restart" => (
-            format!("kubectl rollout restart {} {} -n {}", rtype, name, ns),
-            format!("重启 {} {} (滚动更新)", rtype, name),
-        ),
-        "rollout_status" => (
-            format!("kubectl rollout status {} {} -n {}", rtype, name, ns),
-            format!("查看 {} {} 的滚动更新状态", rtype, name),
-        ),
-        "rollout_history" => (
-            format!("kubectl rollout history {} {} -n {}", rtype, name, ns),
-            format!("查看 {} {} 的历史版本", rtype, name),
-        ),
-        "rollout_undo" => (
-            format!("kubectl rollout undo {} {} -n {}", rtype, name, ns),
-            format!("回滚 {} {} 到上一个版本", rtype, name),
-        ),
+        "rollout_restart" | "rollout_status" | "rollout_history" | "rollout_undo" => {
+            if ["deployment", "statefulset", "daemonset"].contains(&rtype) {
+                let (cmd_suffix, desc_prefix) = match data.action.as_str() {
+                    "rollout_restart" => ("restart", "重启 (滚动更新)"),
+                    "rollout_status" => ("status", "查看滚动更新状态"),
+                    "rollout_history" => ("history", "查看历史版本"),
+                    "rollout_undo" => ("undo", "回滚到上一个版本"),
+                    _ => ("", ""),
+                };
+                (
+                    format!(
+                        "kubectl rollout {} {} {} -n {}",
+                        cmd_suffix, rtype, name, ns
+                    ),
+                    format!("{} {} {}", desc_prefix, rtype, name),
+                )
+            } else {
+                (
+                    format!("# 错误: 资源类型 '{}' 不支持 Rollout 操作\n# 仅支持: Deployment, StatefulSet, DaemonSet", rtype),
+                    format!("无法对 {} 执行 Rollout", rtype),
+                )
+            }
+        }
         _ => ("kubectl --help".to_string(), "显示帮助信息".to_string()),
     }
 }

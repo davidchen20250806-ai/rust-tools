@@ -920,20 +920,24 @@ pub fn generate_firewall(
     }
     match op {
         "add" => {
-            if target_type == "port" {
-                cmd.push_str(" --add-port=");
-            } else {
-                cmd.push_str(" --add-service=");
+            if !target.trim().is_empty() {
+                if target_type == "port" {
+                    cmd.push_str(" --add-port=");
+                } else {
+                    cmd.push_str(" --add-service=");
+                }
+                cmd.push_str(target.trim());
             }
-            cmd.push_str(target.trim());
         }
         "remove" => {
-            if target_type == "port" {
-                cmd.push_str(" --remove-port=");
-            } else {
-                cmd.push_str(" --remove-service=");
+            if !target.trim().is_empty() {
+                if target_type == "port" {
+                    cmd.push_str(" --remove-port=");
+                } else {
+                    cmd.push_str(" --remove-service=");
+                }
+                cmd.push_str(target.trim());
             }
-            cmd.push_str(target.trim());
         }
         "list" => cmd.push_str(" --list-all"),
         "reload" => {
